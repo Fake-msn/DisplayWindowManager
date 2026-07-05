@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 """
-显示器窗口管理器 - Display Window Manager v2.0
+鏄剧ず鍣ㄧ獥鍙ｇ鐞嗗櫒 - Display Window Manager v2.0
 ==============================================
-纯 Python + Win32 API 实现，通过浏览器提供稳定 GUI。
+绾?Python + Win32 API 瀹炵幇锛岄€氳繃娴忚鍣ㄦ彁渚涚ǔ瀹?GUI銆?
+鍔熻兘锛?  1. 涓€閿皢绐楀彛浠庡壇灞忕Щ鍥炰富灞忥紙鎴栧弽鍚戯級
+  2. 璁剧疆涓垏鎹㈢Щ鍔ㄦ柟鍚戯紙涓诲睆鈫掑壇灞?/ 鍓睆鈫掍富灞忥級
+  3. 鏄剧ず鍣ㄥ睆钄斤細閫夋嫨灞忚斀鏌愭樉绀哄櫒锛岄樆姝㈡柊绐楀彛杩涘叆
+  4. 鍏ㄥ眬鐑敭 Ctrl+Shift+M / Ctrl+Shift+S
+  5. 绯荤粺鎵樼洏鍥炬爣 + 鍙抽敭鑿滃崟
 
-功能：
-  1. 一键将窗口从副屏移回主屏（或反向）
-  2. 设置中切换移动方向（主屏→副屏 / 副屏→主屏）
-  3. 显示器屏蔽：选择屏蔽某显示器，阻止新窗口进入
-  4. 全局热键 Ctrl+Shift+M / Ctrl+Shift+S
-  5. 系统托盘图标 + 右键菜单
-
-运行方式: python display_window_manager.py
-浏览器会自动打开 http://127.0.0.1:18888
+杩愯鏂瑰紡: python display_window_manager.py
+娴忚鍣ㄤ細鑷姩鎵撳紑 http://127.0.0.1:18888
 """
 
 import ctypes
@@ -27,7 +25,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 
 # ============================================================
-# DPI 感知
+# DPI 鎰熺煡
 # ============================================================
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
@@ -38,7 +36,7 @@ except Exception:
         pass
 
 # ============================================================
-# Win32 常量
+# Win32 甯搁噺
 # ============================================================
 SWP_NOSIZE = 0x0001
 SWP_NOZORDER = 0x0004
@@ -88,8 +86,7 @@ WS_EX_APPWINDOW = 0x00040000
 WS_EX_NOACTIVATE = 0x08000000
 MDT_EFFECTIVE_DPI = 0
 
-# 补充 wintypes 缺失类型（仅补 Python 3.10 中真正缺失的）
-wintypes.LRESULT = wintypes.LONG
+# 琛ュ厖 wintypes 缂哄け绫诲瀷锛堜粎琛?Python 3.10 涓湡姝ｇ己澶辩殑锛?wintypes.LRESULT = wintypes.LONG
 wintypes.HRESULT = wintypes.LONG
 wintypes.UINT_PTR = ctypes.c_ulonglong if ctypes.sizeof(ctypes.c_void_p) == 8 else ctypes.c_ulong
 wintypes.LONG_PTR = ctypes.c_longlong if ctypes.sizeof(ctypes.c_void_p) == 8 else ctypes.c_long
@@ -98,8 +95,7 @@ wintypes.LPARAM = wintypes.LONG_PTR
 wintypes.HCURSOR = wintypes.HANDLE
 
 # ============================================================
-# 结构体
-# ============================================================
+# 缁撴瀯浣?# ============================================================
 class RECT(ctypes.Structure):
     _fields_ = [('left', ctypes.c_long), ('top', ctypes.c_long), ('right', ctypes.c_long), ('bottom', ctypes.c_long)]
     @property
@@ -139,7 +135,7 @@ class ICONINFO(ctypes.Structure):
     ]
 
 # ============================================================
-# Win32 DLL 加载
+# Win32 DLL 鍔犺浇
 # ============================================================
 user32 = ctypes.windll.user32
 kernel32 = ctypes.windll.kernel32
@@ -147,7 +143,7 @@ shell32 = ctypes.windll.shell32
 shcore = ctypes.windll.shcore
 gdi32 = ctypes.windll.gdi32
 
-# 函数原型
+# 鍑芥暟鍘熷瀷
 user32.EnumWindows.argtypes = [ctypes.c_void_p, wintypes.LPARAM]
 user32.EnumWindows.restype = wintypes.BOOL
 user32.IsWindowVisible.argtypes = [wintypes.HWND]
@@ -211,7 +207,7 @@ user32.GetDpiForWindow.restype = wintypes.UINT
 shcore.GetDpiForMonitor.argtypes = [wintypes.HMONITOR, ctypes.c_int, ctypes.POINTER(wintypes.UINT), ctypes.POINTER(wintypes.UINT)]
 shcore.GetDpiForMonitor.restype = ctypes.c_long
 
-# CreateWindowExW / RegisterClassExW（必须设 argtypes，否则 64 位 HINSTANCE 会溢出）
+# CreateWindowExW / RegisterClassExW锛堝繀椤昏 argtypes锛屽惁鍒?64 浣?HINSTANCE 浼氭孩鍑猴級
 user32.CreateWindowExW.argtypes = [
     wintypes.DWORD, ctypes.c_wchar_p, ctypes.c_wchar_p, wintypes.DWORD,
     ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
@@ -228,7 +224,7 @@ kernel32.GetLastError.restype = wintypes.DWORD
 kernel32.GetModuleHandleW.argtypes = [ctypes.c_wchar_p]
 kernel32.GetModuleHandleW.restype = wintypes.HINSTANCE
 
-# GDI 函数（用于绘制托盘图标）
+# GDI 鍑芥暟锛堢敤浜庣粯鍒舵墭鐩樺浘鏍囷級
 gdi32.CreateCompatibleDC.argtypes = [wintypes.HDC]
 gdi32.CreateCompatibleDC.restype = wintypes.HDC
 gdi32.CreateCompatibleBitmap.argtypes = [wintypes.HDC, ctypes.c_int, ctypes.c_int]
@@ -259,8 +255,7 @@ user32.DefWindowProcW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM,
 user32.DefWindowProcW.restype = wintypes.LRESULT
 
 # ============================================================
-# 窗口管理器
-# ============================================================
+# 绐楀彛绠＄悊鍣?# ============================================================
 class WindowManager:
     SKIP_CLASSES = {
         'Progman', 'Shell_TrayWnd', 'NotifyIconOverflowWindow',
@@ -389,8 +384,7 @@ class WindowManager:
 
 
 # ============================================================
-# 屏蔽器
-# ============================================================
+# 灞忚斀鍣?# ============================================================
 class DisplayShield:
     def __init__(self):
         self._shielded = None
@@ -434,7 +428,7 @@ class DisplayShield:
 
 
 # ============================================================
-# 配置
+# 閰嶇疆
 # ============================================================
 class ConfigManager:
     DEFAULT = {
@@ -487,14 +481,13 @@ class ConfigManager:
 
 
 # ============================================================
-# HTTP 服务器
-# ============================================================
+# HTTP 鏈嶅姟鍣?# ============================================================
 HTML_PAGE = r"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>显示器窗口管理器</title>
+<title>鏄剧ず鍣ㄧ獥鍙ｇ鐞嗗櫒</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Microsoft YaHei UI','Segoe UI',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;display:flex;justify-content:center;padding:20px}
@@ -550,71 +543,71 @@ h1{font-size:20px;text-align:center;margin-bottom:20px;color:#1a1a2e}
 </head>
 <body>
 <div class="card">
-  <h1>显示器窗口管理器</h1>
+  <h1>鏄剧ず鍣ㄧ獥鍙ｇ鐞嗗櫒</h1>
 
   <div class="section">
-    <div class="section-title">显示器状态</div>
-    <div class="monitor-list" id="monitorList">加载中...</div>
+    <div class="section-title">鏄剧ず鍣ㄧ姸鎬?/div>
+    <div class="monitor-list" id="monitorList">鍔犺浇涓?..</div>
   </div>
 
   <div class="section">
     <div class="status-row">
-      <span>移动方向</span>
-      <span id="directionLabel" style="font-weight:600;color:#1976d2">副屏 → 主屏</span>
+      <span>绉诲姩鏂瑰悜</span>
+      <span id="directionLabel" style="font-weight:600;color:#1976d2">鍓睆 鈫?涓诲睆</span>
     </div>
     <div class="status-row">
-      <span>显示器屏蔽</span>
-      <span id="shieldLabel" style="font-weight:600;color:#888">未启用</span>
+      <span>鏄剧ず鍣ㄥ睆钄?/span>
+      <span id="shieldLabel" style="font-weight:600;color:#888">鏈惎鐢?/span>
     </div>
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="moveWindows()">移动窗口</button>
-    <button class="btn btn-danger" id="shieldBtn" onclick="toggleShield()">屏蔽: 关</button>
+    <button class="btn btn-primary" onclick="moveWindows()">绉诲姩绐楀彛</button>
+    <button class="btn btn-danger" id="shieldBtn" onclick="toggleShield()">灞忚斀: 鍏?/button>
   </div>
   <div class="btn-row">
-    <button class="btn btn-outline" onclick="toggleSettings()">设置</button>
-    <button class="btn btn-outline" onclick="refresh()">刷新</button>
+    <button class="btn btn-outline" onclick="toggleSettings()">璁剧疆</button>
+    <button class="btn btn-outline" onclick="refresh()">鍒锋柊</button>
   </div>
 
   <div class="settings-panel" id="settingsPanel">
     <div class="section">
-      <div class="section-title">移动方向</div>
+      <div class="section-title">绉诲姩鏂瑰悜</div>
       <div class="radio-group">
         <label class="radio-option" id="dirOpt1">
           <input type="radio" name="direction" value="secondary_to_primary" checked>
-          副屏 → 主屏（将第二屏幕窗口移回主屏幕）
+          鍓睆 鈫?涓诲睆锛堝皢绗簩灞忓箷绐楀彛绉诲洖涓诲睆骞曪級
         </label>
         <label class="radio-option" id="dirOpt2">
           <input type="radio" name="direction" value="primary_to_secondary">
-          主屏 → 副屏（将主屏幕窗口移至第二屏幕）
+          涓诲睆 鈫?鍓睆锛堝皢涓诲睆骞曠獥鍙ｇЩ鑷崇浜屽睆骞曪級
         </label>
       </div>
     </div>
 
     <div class="section" style="margin-top:16px">
-      <div class="section-title">显示器屏蔽</div>
+      <div class="section-title">鏄剧ず鍣ㄥ睆钄?/div>
       <div class="checkbox-group">
         <input type="checkbox" id="shieldEnabled">
-        <label for="shieldEnabled">启用屏蔽（阻止新窗口进入指定显示器）</label>
+        <label for="shieldEnabled">鍚敤灞忚斀锛堥樆姝㈡柊绐楀彛杩涘叆鎸囧畾鏄剧ず鍣級</label>
       </div>
       <div class="shield-options" id="shieldOptions">
         <div class="shield-row">
           <select id="shieldMonitor"></select>
-          <span class="shield-arrow">→</span>
+          <span class="shield-arrow">鈫?/span>
           <select id="shieldTarget"></select>
         </div>
-        <p style="font-size:12px;color:#888;margin-top:8px">启用后，屏蔽显示器上的窗口将被自动移走，新窗口也不会停留在该显示器上。</p>
+        <p style="font-size:12px;color:#888;margin-top:8px">鍚敤鍚庯紝灞忚斀鏄剧ず鍣ㄤ笂鐨勭獥鍙ｅ皢琚嚜鍔ㄧЩ璧帮紝鏂扮獥鍙ｄ篃涓嶄細鍋滅暀鍦ㄨ鏄剧ず鍣ㄤ笂銆?/p>
       </div>
     </div>
 
     <div class="settings-btns">
-      <button class="btn btn-primary" onclick="saveSettings()">保存</button>
-      <button class="btn btn-outline" onclick="toggleSettings()">取消</button>
+      <button class="btn btn-primary" onclick="saveSettings()">淇濆瓨</button>
+      <button class="btn btn-outline" onclick="toggleSettings()">鍙栨秷</button>
     </div>
   </div>
 
-  <div class="hk-info">Ctrl+Shift+M 移动 · Ctrl+Shift+S 切换屏蔽</div>
+  <div class="hk-info">Ctrl+Shift+M 绉诲姩 路 Ctrl+Shift+S 鍒囨崲灞忚斀</div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -637,34 +630,34 @@ async function refresh() {
 function renderMonitors(monitors) {
   const el = document.getElementById('monitorList');
   if (!monitors || monitors.length === 0) {
-    el.innerHTML = '<div class="monitor-item" style="color:#888">未检测到显示器</div>';
+    el.innerHTML = '<div class="monitor-item" style="color:#888">鏈娴嬪埌鏄剧ず鍣?/div>';
     return;
   }
   el.innerHTML = monitors.map(m =>
     `<div class="monitor-item">
-      <span>显示器 ${m.index}: ${m.width}x${m.height}</span>
-      ${m.primary ? '<span class="badge badge-primary">主显示器</span>' : '<span class="badge badge-secondary">副屏</span>'}
+      <span>鏄剧ず鍣?${m.index}: ${m.width}x${m.height}</span>
+      ${m.primary ? '<span class="badge badge-primary">涓绘樉绀哄櫒</span>' : '<span class="badge badge-secondary">鍓睆</span>'}
     </div>`
   ).join('');
 }
 
 function renderDirection(dir) {
   const el = document.getElementById('directionLabel');
-  el.textContent = dir === 'secondary_to_primary' ? '副屏 → 主屏' : '主屏 → 副屏';
+  el.textContent = dir === 'secondary_to_primary' ? '鍓睆 鈫?涓诲睆' : '涓诲睆 鈫?鍓睆';
 }
 
 function renderShield(sh) {
   const el = document.getElementById('shieldLabel');
   const btn = document.getElementById('shieldBtn');
   if (sh.active) {
-    el.innerHTML = '<span class="status-dot active"></span>已启用 (显示器'+sh.shielded+' → 显示器'+sh.target+')';
+    el.innerHTML = '<span class="status-dot active"></span>宸插惎鐢?(鏄剧ず鍣?+sh.shielded+' 鈫?鏄剧ず鍣?+sh.target+')';
     el.style.color = '#e53935';
-    btn.textContent = '屏蔽: 开';
+    btn.textContent = '灞忚斀: 寮€';
     btn.classList.add('active');
   } else {
-    el.innerHTML = '<span class="status-dot inactive"></span>未启用';
+    el.innerHTML = '<span class="status-dot inactive"></span>鏈惎鐢?;
     el.style.color = '#888';
-    btn.textContent = '屏蔽: 关';
+    btn.textContent = '灞忚斀: 鍏?;
     btn.classList.remove('active');
   }
 }
@@ -682,7 +675,7 @@ function renderSettings(s) {
   sm.innerHTML = st.innerHTML = '';
   if (s.monitors) {
     s.monitors.forEach(m => {
-      const opt = `<option value="${m.index}">${m.index === 1 ? '显示器 1'+(m.primary?' (主)':'') : '显示器 '+m.index}</option>`;
+      const opt = `<option value="${m.index}">${m.index === 1 ? '鏄剧ず鍣?1'+(m.primary?' (涓?':'') : '鏄剧ず鍣?'+m.index}</option>`;
       sm.innerHTML += opt;
       st.innerHTML += opt;
     });
@@ -716,14 +709,14 @@ async function saveSettings() {
     });
     const j = await r.json();
     if (j.ok) {
-      showToast('设置已保存');
+      showToast('璁剧疆宸蹭繚瀛?);
       document.getElementById('settingsPanel').classList.remove('show');
       refresh();
     } else {
-      showToast('保存失败: ' + (j.error || '未知错误'));
+      showToast('淇濆瓨澶辫触: ' + (j.error || '鏈煡閿欒'));
     }
   } catch(e) {
-    showToast('网络错误');
+    showToast('缃戠粶閿欒');
   }
 }
 
@@ -734,7 +727,7 @@ async function moveWindows() {
     showToast(j.message);
     refresh();
   } catch(e) {
-    showToast('操作失败');
+    showToast('鎿嶄綔澶辫触');
   }
 }
 
@@ -745,7 +738,7 @@ async function toggleShield() {
     showToast(j.message);
     refresh();
   } catch(e) {
-    showToast('操作失败');
+    showToast('鎿嶄綔澶辫触');
   }
 }
 
@@ -774,11 +767,9 @@ document.querySelectorAll('.radio-option').forEach(o => {
   });
 });
 
-// 心跳：每 5 秒 ping 一次，保持服务端存活
-setInterval(() => { fetch(API+'/ping').catch(()=>{}); }, 5000);
+// 蹇冭烦锛氭瘡 5 绉?ping 涓€娆★紝淇濇寔鏈嶅姟绔瓨娲?setInterval(() => { fetch(API+'/ping').catch(()=>{}); }, 5000);
 
-// 关闭网页时通知服务端退出
-window.addEventListener('beforeunload', () => {
+// 鍏抽棴缃戦〉鏃堕€氱煡鏈嶅姟绔€€鍑?window.addEventListener('beforeunload', () => {
   navigator.sendBeacon(API+'/quit');
 });
 
@@ -827,55 +818,55 @@ class RequestHandler(BaseHTTPRequestHandler):
             cfg = app.config
             monitors = WindowManager.get_monitors()
             if len(monitors) < 2:
-                self._send(200, {'ok': False, 'message': '仅检测到一个显示器'})
+                self._send(200, {'ok': False, 'message': '浠呮娴嬪埌涓€涓樉绀哄櫒'})
                 return
             if cfg['move_direction'] == 'secondary_to_primary':
                 primary = next((m for m in monitors if m['primary']), None)
                 if not primary:
-                    self._send(200, {'ok': False, 'message': '无法确定主显示器'})
+                    self._send(200, {'ok': False, 'message': '鏃犳硶纭畾涓绘樉绀哄櫒'})
                     return
                 total = 0
                 for m in monitors:
                     if not m['primary']:
                         total += len(WindowManager.move_all_from_monitor(m['index'], primary['index']))
-                self._send(200, {'ok': True, 'message': f'已将 {total} 个窗口从副屏移动到主屏'})
+                self._send(200, {'ok': True, 'message': f'宸插皢 {total} 涓獥鍙ｄ粠鍓睆绉诲姩鍒颁富灞?})
             else:
                 primary = next((m for m in monitors if m['primary']), None)
                 if not primary:
-                    self._send(200, {'ok': False, 'message': '无法确定主显示器'})
+                    self._send(200, {'ok': False, 'message': '鏃犳硶纭畾涓绘樉绀哄櫒'})
                     return
                 target = next((m for m in monitors if not m['primary']), None)
                 if not target:
-                    self._send(200, {'ok': False, 'message': '没有检测到副屏'})
+                    self._send(200, {'ok': False, 'message': '娌℃湁妫€娴嬪埌鍓睆'})
                     return
                 moved = WindowManager.move_all_from_monitor(primary['index'], target['index'])
-                self._send(200, {'ok': True, 'message': f'已将 {len(moved)} 个窗口从主屏移动到显示器 {target["index"]}'})
+                self._send(200, {'ok': True, 'message': f'宸插皢 {len(moved)} 涓獥鍙ｄ粠涓诲睆绉诲姩鍒版樉绀哄櫒 {target["index"]}'})
         elif self.path == '/api/toggle-shield':
             app = self.app
             if app.shield.is_active:
                 app.shield.stop()
                 app.config['shield_enabled'] = False
                 app.config.save()
-                self._send(200, {'ok': True, 'message': '屏蔽已关闭'})
+                self._send(200, {'ok': True, 'message': '灞忚斀宸插叧闂?})
             else:
                 monitors = WindowManager.get_monitors()
                 if len(monitors) < 2:
-                    self._send(200, {'ok': False, 'message': '需要至少 2 个显示器'})
+                    self._send(200, {'ok': False, 'message': '闇€瑕佽嚦灏?2 涓樉绀哄櫒'})
                     return
                 si = app.config['shield_monitor']
                 ti = app.config['shield_target']
                 if si == ti:
-                    self._send(200, {'ok': False, 'message': '屏蔽显示器和目标显示器不能相同'})
+                    self._send(200, {'ok': False, 'message': '灞忚斀鏄剧ず鍣ㄥ拰鐩爣鏄剧ず鍣ㄤ笉鑳界浉鍚?})
                     return
                 app.shield.start(si, ti)
                 app.config['shield_enabled'] = True
                 app.config.save()
-                self._send(200, {'ok': True, 'message': f'屏蔽已启用 (显示器 {si} → 显示器 {ti})'})
+                self._send(200, {'ok': True, 'message': f'灞忚斀宸插惎鐢?(鏄剧ず鍣?{si} 鈫?鏄剧ず鍣?{ti})'})
         elif self.path == '/api/ping':
             self.app.last_heartbeat = time.time()
             self._send(200, {'ok': True, 'ping': 'pong'})
         elif self.path == '/api/quit':
-            self._send(200, {'ok': True, 'message': '正在退出...'})
+            self._send(200, {'ok': True, 'message': '姝ｅ湪閫€鍑?..'})
             threading.Thread(target=self.app.quit, daemon=True).start()
         else:
             self._send(404, {'error': 'Not found'})
@@ -893,7 +884,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             app.apply_shield_settings()
             self._send(200, {'ok': True})
         elif self.path == '/api/quit':
-            self._send(200, {'ok': True, 'message': '正在退出...'})
+            self._send(200, {'ok': True, 'message': '姝ｅ湪閫€鍑?..'})
             threading.Thread(target=self.app.quit, daemon=True).start()
         else:
             self._send(404, {'error': 'Not found'})
@@ -907,7 +898,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 # ============================================================
-# 托盘 + 热键 消息窗口
+# 鎵樼洏 + 鐑敭 娑堟伅绐楀彛
 # ============================================================
 class TrayWindow:
     def __init__(self, app):
@@ -948,14 +939,14 @@ class TrayWindow:
         nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP
         nid.uCallbackMessage = WM_TRAYICON
         nid.hIcon = self._icon
-        nid.szTip = "显示器窗口管理器"
+        nid.szTip = "鏄剧ず鍣ㄧ獥鍙ｇ鐞嗗櫒"
         shell32.Shell_NotifyIconW(NIM_ADD, byref(nid))
 
         user32.RegisterHotKey(self.hwnd, 1, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_M)
         user32.RegisterHotKey(self.hwnd, 2, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_S)
 
     def _create_tray_icon(self):
-        """用 GDI 绘制一个简单的显示器图标"""
+        """鐢?GDI 缁樺埗涓€涓畝鍗曠殑鏄剧ず鍣ㄥ浘鏍?""
         SM_CXSMICON = 49
         SM_CYSMICON = 50
         w = user32.GetSystemMetrics(SM_CXSMICON)
@@ -964,24 +955,24 @@ class TrayWindow:
         hdc = user32.GetDC(None)
         mem_dc = gdi32.CreateCompatibleDC(hdc)
 
-        # 创建颜色位图
+        # 鍒涘缓棰滆壊浣嶅浘
         bmp = gdi32.CreateCompatibleBitmap(hdc, w, h)
         gdi32.SelectObject(mem_dc, bmp)
 
-        # 蓝色背景
+        # 钃濊壊鑳屾櫙
         full = RECT(0, 0, w, h)
         brush = gdi32.CreateSolidBrush(0x00D67619)  # BGR = #1976D2
         user32.FillRect(mem_dc, byref(full), brush)
         gdi32.DeleteObject(brush)
 
-        # 白色屏幕区域
+        # 鐧借壊灞忓箷鍖哄煙
         pad = max(2, w // 8)
         sr = RECT(pad, pad, w - pad, h - pad - h // 4)
         brush = gdi32.CreateSolidBrush(0x00FFFFFF)
         user32.FillRect(mem_dc, byref(sr), brush)
         gdi32.DeleteObject(brush)
 
-        # 白色底座
+        # 鐧借壊搴曞骇
         sw = max(3, w // 4)
         br = RECT(w // 2 - sw // 2, h - pad - h // 4, w // 2 + sw // 2, h - pad)
         brush = gdi32.CreateSolidBrush(0x00FFFFFF)
@@ -991,13 +982,12 @@ class TrayWindow:
         gdi32.DeleteDC(mem_dc)
         user32.ReleaseDC(None, hdc)
 
-        # 创建单色 AND 掩码（全白=全不透明）
-        mask_bytes = (ctypes.c_ubyte * (((w * h) + 7) // 8))()
+        # 鍒涘缓鍗曡壊 AND 鎺╃爜锛堝叏鐧?鍏ㄤ笉閫忔槑锛?        mask_bytes = (ctypes.c_ubyte * (((w * h) + 7) // 8))()
         for i in range(len(mask_bytes)):
             mask_bytes[i] = 0xFF
         mask_bmp = gdi32.CreateBitmap(w, h, 1, 1, mask_bytes)
 
-        # 创建图标
+        # 鍒涘缓鍥炬爣
         ic = ICONINFO()
         ic.fIcon = True
         ic.hbmColor = bmp
@@ -1010,13 +1000,13 @@ class TrayWindow:
 
     def _show_menu(self):
         menu = user32.CreatePopupMenu()
-        s = "屏蔽: 开" if self.app.shield.is_active else "屏蔽: 关"
-        user32.AppendMenuW(menu, MF_STRING, 1, "移动窗口")
+        s = "灞忚斀: 寮€" if self.app.shield.is_active else "灞忚斀: 鍏?
+        user32.AppendMenuW(menu, MF_STRING, 1, "绉诲姩绐楀彛")
         user32.AppendMenuW(menu, MF_STRING, 2, s)
         user32.AppendMenuW(menu, MF_SEPARATOR, 0, None)
-        user32.AppendMenuW(menu, MF_STRING, 3, "打开界面")
+        user32.AppendMenuW(menu, MF_STRING, 3, "鎵撳紑鐣岄潰")
         user32.AppendMenuW(menu, MF_SEPARATOR, 0, None)
-        user32.AppendMenuW(menu, MF_STRING, 4, "退出")
+        user32.AppendMenuW(menu, MF_STRING, 4, "閫€鍑?)
         pt = POINT()
         user32.GetCursorPos(byref(pt))
         user32.SetForegroundWindow(self.hwnd)
@@ -1106,13 +1096,13 @@ class TrayWindow:
 
 
 # ============================================================
-# 应用程序
+# 搴旂敤绋嬪簭
 # ============================================================
 class App:
     def __init__(self):
         h = kernel32.CreateMutexW(None, False, "Global\\DWM_SingleInstance_v2")
         if kernel32.GetLastError() == ERROR_ALREADY_EXISTS:
-            user32.MessageBoxW(None, "显示器窗口管理器已经在运行中。", "已在运行", MB_OK | MB_ICONWARNING)
+            user32.MessageBoxW(None, "鏄剧ず鍣ㄧ獥鍙ｇ鐞嗗櫒宸茬粡鍦ㄨ繍琛屼腑銆?, "宸插湪杩愯", MB_OK | MB_ICONWARNING)
             sys.exit(0)
 
         self.config = ConfigManager()
@@ -1122,7 +1112,7 @@ class App:
         self.last_heartbeat = time.time()
 
     def _heartbeat_checker(self):
-        """后台线程：检测心跳超时则自动退出"""
+        """鍚庡彴绾跨▼锛氭娴嬪績璺宠秴鏃跺垯鑷姩閫€鍑?""
         while True:
             time.sleep(5)
             if time.time() - self.last_heartbeat > 15:
@@ -1130,7 +1120,7 @@ class App:
                 return
 
     def quit(self):
-        """安全退出应用"""
+        """瀹夊叏閫€鍑哄簲鐢?""
         self.shield.stop()
         if self.tray:
             self.tray._running = False
