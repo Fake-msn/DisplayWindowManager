@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows_10_11-blue)](https://www.microsoft.com/windows)
-[![Version](https://img.shields.io/badge/version-v0.51-brightgreen)](https://github.com/Fake-msn/DisplayWindowManager/releases)
+[![Version](https://img.shields.io/badge/version-V0.51-brightgreen)](https://github.com/Fake-msn/DisplayWindowManager/releases)
 [![GitHub Pages](https://img.shields.io/badge/pages-%E5%9C%A8%E7%BA%BF%E4%BD%93%E9%AA%8C-brightgreen)](https://Fake-msn.github.io/DisplayWindowManager/)
 
 ---
