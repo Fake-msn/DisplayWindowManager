@@ -217,10 +217,10 @@ body {
   transition: opacity .4s ease;
 }
 .hero h1.font-loaded .hero-svg { opacity: 0; }
-/* Inherit text color for SVG glyphs + fix positioning */
+/* Fix SVG glyph orientation: TrueType Y=up, SVG Y=down → flip Y + reposition */
 .hero-svg g {
   fill: currentColor;
-  transform: none;
+  transform: matrix(1, 0, 0, -1, 0, 850);
 }
 /* Line-2 SVG inherits .hero-spring transform */
 /* Text fade in when font ready */
