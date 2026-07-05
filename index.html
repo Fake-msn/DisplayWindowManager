@@ -12,6 +12,7 @@
 
 :root {
   --font: -apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-display: 'Jiangxi Zhuokai','江西拙楷体','PingFang SC','Microsoft YaHei',serif;
   --font-mono: 'SF Mono','Menlo','Consolas','Cascadia Code',monospace;
   --radius: 18px;
   --radius-sm: 12px;
@@ -78,7 +79,8 @@ body {
   font-family: var(--font);
   background: var(--color-bg);
   color: var(--color-text);
-  line-height: 1.5;
+  line-height: 1.7;
+  letter-spacing: .03em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: var(--transition-theme);
@@ -123,8 +125,9 @@ body {
   opacity: 0; animation: fadeUp .7s ease forwards;
 }
 .hero h1 {
+  font-family: var(--font-display);
   font-size: clamp(40px, 6vw, 64px); font-weight: 700;
-  letter-spacing: -.03em; line-height: 1.08;
+  letter-spacing: .04em; line-height: 1.25;
   color: var(--color-text); margin-bottom: 20px;
   opacity: 0; animation: fadeUp .7s .1s ease forwards;
 }
@@ -195,7 +198,7 @@ body {
 .section-inner { max-width: 980px; margin: 0 auto; }
 
 .section-label {
-  font-size: 16px; font-weight: 600; letter-spacing: .04em;
+  font-size: 20px; font-weight: 600; letter-spacing: .04em;
   color: var(--color-text-tertiary); text-transform: uppercase;
   margin-bottom: 16px;
 }
