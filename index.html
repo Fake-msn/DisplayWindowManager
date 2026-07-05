@@ -137,8 +137,8 @@ body {
 }
 .hero h1 {
   font-family: var(--font-display);
-  font-size: clamp(40px, 6vw, 64px); font-weight: 700;
-  letter-spacing: .04em; line-height: 1.25;
+  font-size: clamp(40px, 6vw, 64px); font-weight: 400;
+  letter-spacing: .02em; line-height: 1.4;
   color: var(--color-text); margin-bottom: 20px;
   opacity: 0; animation: fadeUp .7s .1s ease forwards;
 }
@@ -419,7 +419,7 @@ body {
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .hero { padding: 56px 20px 48px; }
-  .hero h1 { font-size: 36px; }
+  .hero h1 { font-size: 36px; font-weight: 400; }
   .hero p { font-size: 17px; }
   .hero-spring { transform: translateX(6vw); font-size: 1.1em; }
   .hero-actions { flex-direction: column; align-items: center; }
