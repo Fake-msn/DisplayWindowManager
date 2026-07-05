@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows_10_11-blue)](https://www.microsoft.com/windows)
-[![Version](https://img.shields.io/badge/version-V0.51-brightgreen)](https://github.com/Fake-msn/DisplayWindowManager/releases)
+[![Version](https://img.shields.io/badge/version-V0.52-brightgreen)](https://github.com/Fake-msn/DisplayWindowManager/releases)
 [![GitHub Pages](https://img.shields.io/badge/pages-%E5%9C%A8%E7%BA%BF%E4%BD%93%E9%AA%8C-brightgreen)](https://Fake-msn.github.io/DisplayWindowManager/)
 
 ---
@@ -32,6 +32,7 @@
 | **全局热键** | `Ctrl+Shift+M` 移动窗口，`Ctrl+Shift+S` 切换屏蔽 |
 | **零依赖** | 纯 Python + Win32 API，打包为单文件 EXE（约 10MB） |
 | **浏览器界面** | 美观的 Web UI，通过浏览器访问和控制 |
+| **多语言支持** | 中/英文界面一键切换，语言偏好自动保存 |
 
 ---
 
@@ -70,6 +71,7 @@ pyinstaller --onefile --windowed --name "DisplayWindowManager" display_window_ma
 - **屏蔽开关** — 开启/关闭显示器屏蔽
 - **设置** — 修改移动方向、配置屏蔽规则
 - **刷新** — 刷新窗口状态
+- **语言切换** — 右上角一键切换中/英文界面，偏好自动保存
 
 ### 设置面板
 
@@ -99,7 +101,7 @@ pyinstaller --onefile --windowed --name "DisplayWindowManager" display_window_ma
 | **浏览器 UI** | **✅** | ❌ | ❌ | ❌ | ❌ |
 | **零安装** | **✅ 单文件 EXE** | ❌ 需安装 | ❌ 需安装 | ❌ 需安装 | ✅ 绿色版 |
 | **活跃维护** | **✅ 2026** | ✅ 2026 | ✅ 2026 | ✅ 2026 | ❌ 2023 |
-| **中文界面** | **✅ 原生** | 部分汉化 | ✅ | ❌ | ❌ |
+| **多语言界面** | **✅ 中/英** | 部分汉化 | ✅ | ❌ | ❌ |
 
 > ¹ PowerToys 整体安装包大小，FancyZones 为其中一个模块
 
@@ -108,7 +110,7 @@ pyinstaller --onefile --windowed --name "DisplayWindowManager" display_window_ma
 1. **真正的一键操作** — 不需要在每个窗口标题栏上找按钮，Ctrl+Shift+M 一步到位
 2. **显示器屏蔽** — 独家功能，从源头阻止新窗口进入指定显示器，不是简单的"变暗"
 3. **零学习成本** — 只有一个 EXE 文件，双击即用，无需安装配置
-4. **中文原生支持** — 为中国用户设计，界面和文档全中文
+4. **多语言界面** — 中/英文一键切换，中文用户和海外用户都能轻松使用
 5. **浏览器 UI** — 无需学习复杂界面，在浏览器中直观操作
 6. **极致轻量** — 不到 10MB 的单文件，内存占用极低
 
@@ -144,6 +146,7 @@ display_window_manager.py
 | `/api/ping` | GET | 心跳检测 |
 | `/api/quit` | GET | 退出程序 |
 | `/api/save-settings` | POST | 保存设置 |
+| `/api/set-language` | GET | 切换界面语言（`?lang=zh\|en`） |
 
 ---
 
@@ -158,7 +161,7 @@ display_window_manager.py
 - [x] 浏览器 UI
 - [ ] 窗口列表预览（移动前确认）
 - [ ] 自动启动（开机自启）
-- [ ] 多语言支持（英文）
+- [x] 多语言支持（中/英文）
 - [ ] 窗口位置记忆与恢复
 
 ---

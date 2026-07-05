@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
-鏄剧ず鍣ㄧ獥鍙ｇ鐞嗗櫒 - Display Window Manager v2.0
+显示器窗口管理器 - Display Window Manager v2.0
 ==============================================
-绾?Python + Win32 API 瀹炵幇锛岄€氳繃娴忚鍣ㄦ彁渚涚ǔ瀹?GUI銆?
-鍔熻兘锛?  1. 涓€閿皢绐楀彛浠庡壇灞忕Щ鍥炰富灞忥紙鎴栧弽鍚戯級
-  2. 璁剧疆涓垏鎹㈢Щ鍔ㄦ柟鍚戯紙涓诲睆鈫掑壇灞?/ 鍓睆鈫掍富灞忥級
-  3. 鏄剧ず鍣ㄥ睆钄斤細閫夋嫨灞忚斀鏌愭樉绀哄櫒锛岄樆姝㈡柊绐楀彛杩涘叆
-  4. 鍏ㄥ眬鐑敭 Ctrl+Shift+M / Ctrl+Shift+S
-  5. 绯荤粺鎵樼洏鍥炬爣 + 鍙抽敭鑿滃崟
+纯 Python + Win32 API 实现，通过浏览器提供稳定 GUI。
 
-杩愯鏂瑰紡: python display_window_manager.py
-娴忚鍣ㄤ細鑷姩鎵撳紑 http://127.0.0.1:18888
+功能：
+  1. 一键将窗口从副屏移回主屏（或反向）
+  2. 设置中切换移动方向（主屏→副屏 / 副屏→主屏）
+  3. 显示器屏蔽：选择屏蔽某显示器，阻止新窗口进入
+  4. 全局热键 Ctrl+Shift+M / Ctrl+Shift+S
+  5. 系统托盘图标 + 右键菜单
+
+运行方式: python display_window_manager.py
+浏览器会自动打开 http://127.0.0.1:18888
 """
 
 import ctypes
@@ -25,7 +27,127 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 
 # ============================================================
-# DPI 鎰熺煡
+# 多语言 (i18n)
+# ============================================================
+I18N = {
+    'zh': {
+        'title': '显示器窗口管理器',
+        'heading': '显示器窗口管理器',
+        'section_monitor': '显示器状态',
+        'loading': '加载中...',
+        'direction_label': '移动方向',
+        'dir_secondary_to_primary': '副屏 → 主屏',
+        'dir_primary_to_secondary': '主屏 → 副屏',
+        'shield_label': '显示器屏蔽',
+        'shield_off': '未启用',
+        'shield_on': '已启用',
+        'btn_move': '移动窗口',
+        'btn_shield_off': '屏蔽: 关',
+        'btn_shield_on': '屏蔽: 开',
+        'btn_settings': '设置',
+        'btn_refresh': '刷新',
+        'settings_direction': '移动方向',
+        'dir_opt1': '副屏 → 主屏（将第二屏幕窗口移回主屏幕）',
+        'dir_opt2': '主屏 → 副屏（将主屏幕窗口移至第二屏幕）',
+        'settings_shield': '显示器屏蔽',
+        'shield_checkbox': '启用屏蔽（阻止新窗口进入指定显示器）',
+        'shield_hint': '启用后，屏蔽显示器上的窗口将被自动移走，新窗口也不会停留在该显示器上。',
+        'btn_save': '保存',
+        'btn_cancel': '取消',
+        'hk_info': 'Ctrl+Shift+M 移动 · Ctrl+Shift+S 切换屏蔽',
+        'monitor': '显示器',
+        'primary': '主显示器',
+        'secondary': '副屏',
+        'no_monitor': '未检测到显示器',
+        'toast_saved': '设置已保存',
+        'toast_save_fail': '保存失败',
+        'toast_unknown_error': '未知错误',
+        'toast_network_error': '网络错误',
+        'toast_operation_fail': '操作失败',
+        'tray_tip': '显示器窗口管理器',
+        'menu_move': '移动窗口',
+        'menu_shield_on': '屏蔽: 开',
+        'menu_shield_off': '屏蔽: 关',
+        'menu_open': '打开界面',
+        'menu_exit': '退出',
+        'msg_single_monitor': '仅检测到一个显示器',
+        'msg_no_primary': '无法确定主显示器',
+        'msg_no_secondary': '没有检测到副屏',
+        'msg_moved_to_primary': '已将 {total} 个窗口从副屏移动到主屏',
+        'msg_moved_to_secondary': '已将 {count} 个窗口从主屏移动到显示器 {index}',
+        'msg_shield_off': '屏蔽已关闭',
+        'msg_shield_need_two': '需要至少 2 个显示器',
+        'msg_shield_same': '屏蔽显示器和目标显示器不能相同',
+        'msg_shield_on': '屏蔽已启用 (显示器 {si} → 显示器 {ti})',
+        'msg_quitting': '正在退出...',
+        'msg_already_running': '显示器窗口管理器已经在运行中。',
+        'msg_already_running_title': '已在运行',
+        'lang_toggle': 'English',
+        'lang_switch': '语言',
+    },
+    'en': {
+        'title': 'Display Window Manager',
+        'heading': 'Display Window Manager',
+        'section_monitor': 'Monitor Status',
+        'loading': 'Loading...',
+        'direction_label': 'Move Direction',
+        'dir_secondary_to_primary': 'Secondary → Primary',
+        'dir_primary_to_secondary': 'Primary → Secondary',
+        'shield_label': 'Display Shield',
+        'shield_off': 'Disabled',
+        'shield_on': 'Enabled',
+        'btn_move': 'Move Windows',
+        'btn_shield_off': 'Shield: Off',
+        'btn_shield_on': 'Shield: On',
+        'btn_settings': 'Settings',
+        'btn_refresh': 'Refresh',
+        'settings_direction': 'Move Direction',
+        'dir_opt1': 'Secondary → Primary (move windows from secondary to primary monitor)',
+        'dir_opt2': 'Primary → Secondary (move windows from primary to secondary monitor)',
+        'settings_shield': 'Display Shield',
+        'shield_checkbox': 'Enable Shield (prevent new windows from entering the selected monitor)',
+        'shield_hint': 'When enabled, windows on the shielded monitor will be automatically moved away, and new windows will not stay on that monitor.',
+        'btn_save': 'Save',
+        'btn_cancel': 'Cancel',
+        'hk_info': 'Ctrl+Shift+M Move · Ctrl+Shift+S Toggle Shield',
+        'monitor': 'Monitor',
+        'primary': 'Primary',
+        'secondary': 'Secondary',
+        'no_monitor': 'No monitors detected',
+        'toast_saved': 'Settings saved',
+        'toast_save_fail': 'Save failed',
+        'toast_unknown_error': 'Unknown error',
+        'toast_network_error': 'Network error',
+        'toast_operation_fail': 'Operation failed',
+        'tray_tip': 'Display Window Manager',
+        'menu_move': 'Move Windows',
+        'menu_shield_on': 'Shield: On',
+        'menu_shield_off': 'Shield: Off',
+        'menu_open': 'Open UI',
+        'menu_exit': 'Exit',
+        'msg_single_monitor': 'Only one monitor detected',
+        'msg_no_primary': 'Cannot determine primary monitor',
+        'msg_no_secondary': 'No secondary monitor detected',
+        'msg_moved_to_primary': 'Moved {total} windows from secondary to primary monitor',
+        'msg_moved_to_secondary': 'Moved {count} windows from primary to monitor {index}',
+        'msg_shield_off': 'Shield disabled',
+        'msg_shield_need_two': 'At least 2 monitors required',
+        'msg_shield_same': 'Shield monitor and target monitor must be different',
+        'msg_shield_on': 'Shield enabled (Monitor {si} → Monitor {ti})',
+        'msg_quitting': 'Exiting...',
+        'msg_already_running': 'Display Window Manager is already running.',
+        'msg_already_running_title': 'Already Running',
+        'lang_toggle': '中文',
+        'lang_switch': 'Language',
+    },
+}
+
+def get_lang_str(lang, key):
+    """获取翻译字符串，缺失时回退到中文"""
+    return I18N.get(lang, I18N['zh']).get(key, I18N['zh'].get(key, key))
+
+# ============================================================
+# DPI 感知
 # ============================================================
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
@@ -36,7 +158,7 @@ except Exception:
         pass
 
 # ============================================================
-# Win32 甯搁噺
+# Win32 常量
 # ============================================================
 SWP_NOSIZE = 0x0001
 SWP_NOZORDER = 0x0004
@@ -86,7 +208,8 @@ WS_EX_APPWINDOW = 0x00040000
 WS_EX_NOACTIVATE = 0x08000000
 MDT_EFFECTIVE_DPI = 0
 
-# 琛ュ厖 wintypes 缂哄け绫诲瀷锛堜粎琛?Python 3.10 涓湡姝ｇ己澶辩殑锛?wintypes.LRESULT = wintypes.LONG
+# 补充 wintypes 缺失类型（仅补 Python 3.10 中真正缺失的）
+wintypes.LRESULT = wintypes.LONG
 wintypes.HRESULT = wintypes.LONG
 wintypes.UINT_PTR = ctypes.c_ulonglong if ctypes.sizeof(ctypes.c_void_p) == 8 else ctypes.c_ulong
 wintypes.LONG_PTR = ctypes.c_longlong if ctypes.sizeof(ctypes.c_void_p) == 8 else ctypes.c_long
@@ -95,7 +218,8 @@ wintypes.LPARAM = wintypes.LONG_PTR
 wintypes.HCURSOR = wintypes.HANDLE
 
 # ============================================================
-# 缁撴瀯浣?# ============================================================
+# 结构体
+# ============================================================
 class RECT(ctypes.Structure):
     _fields_ = [('left', ctypes.c_long), ('top', ctypes.c_long), ('right', ctypes.c_long), ('bottom', ctypes.c_long)]
     @property
@@ -135,7 +259,7 @@ class ICONINFO(ctypes.Structure):
     ]
 
 # ============================================================
-# Win32 DLL 鍔犺浇
+# Win32 DLL 加载
 # ============================================================
 user32 = ctypes.windll.user32
 kernel32 = ctypes.windll.kernel32
@@ -143,7 +267,7 @@ shell32 = ctypes.windll.shell32
 shcore = ctypes.windll.shcore
 gdi32 = ctypes.windll.gdi32
 
-# 鍑芥暟鍘熷瀷
+# 函数原型
 user32.EnumWindows.argtypes = [ctypes.c_void_p, wintypes.LPARAM]
 user32.EnumWindows.restype = wintypes.BOOL
 user32.IsWindowVisible.argtypes = [wintypes.HWND]
@@ -207,7 +331,7 @@ user32.GetDpiForWindow.restype = wintypes.UINT
 shcore.GetDpiForMonitor.argtypes = [wintypes.HMONITOR, ctypes.c_int, ctypes.POINTER(wintypes.UINT), ctypes.POINTER(wintypes.UINT)]
 shcore.GetDpiForMonitor.restype = ctypes.c_long
 
-# CreateWindowExW / RegisterClassExW锛堝繀椤昏 argtypes锛屽惁鍒?64 浣?HINSTANCE 浼氭孩鍑猴級
+# CreateWindowExW / RegisterClassExW（必须设 argtypes，否则 64 位 HINSTANCE 会溢出）
 user32.CreateWindowExW.argtypes = [
     wintypes.DWORD, ctypes.c_wchar_p, ctypes.c_wchar_p, wintypes.DWORD,
     ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
@@ -224,7 +348,7 @@ kernel32.GetLastError.restype = wintypes.DWORD
 kernel32.GetModuleHandleW.argtypes = [ctypes.c_wchar_p]
 kernel32.GetModuleHandleW.restype = wintypes.HINSTANCE
 
-# GDI 鍑芥暟锛堢敤浜庣粯鍒舵墭鐩樺浘鏍囷級
+# GDI 函数（用于绘制托盘图标）
 gdi32.CreateCompatibleDC.argtypes = [wintypes.HDC]
 gdi32.CreateCompatibleDC.restype = wintypes.HDC
 gdi32.CreateCompatibleBitmap.argtypes = [wintypes.HDC, ctypes.c_int, ctypes.c_int]
@@ -255,7 +379,8 @@ user32.DefWindowProcW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM,
 user32.DefWindowProcW.restype = wintypes.LRESULT
 
 # ============================================================
-# 绐楀彛绠＄悊鍣?# ============================================================
+# 窗口管理器
+# ============================================================
 class WindowManager:
     SKIP_CLASSES = {
         'Progman', 'Shell_TrayWnd', 'NotifyIconOverflowWindow',
@@ -384,7 +509,8 @@ class WindowManager:
 
 
 # ============================================================
-# 灞忚斀鍣?# ============================================================
+# 屏蔽器
+# ============================================================
 class DisplayShield:
     def __init__(self):
         self._shielded = None
@@ -428,7 +554,7 @@ class DisplayShield:
 
 
 # ============================================================
-# 閰嶇疆
+# 配置
 # ============================================================
 class ConfigManager:
     DEFAULT = {
@@ -436,6 +562,7 @@ class ConfigManager:
         'shield_enabled': False,
         'shield_monitor': 2,
         'shield_target': 1,
+        'language': 'zh',
     }
 
     def __init__(self):
@@ -481,18 +608,21 @@ class ConfigManager:
 
 
 # ============================================================
-# HTTP 鏈嶅姟鍣?# ============================================================
-HTML_PAGE = r"""<!DOCTYPE html>
-<html lang="zh-CN">
+# HTTP 服务器
+# ============================================================
+HTML_PAGE = """<!DOCTYPE html>
+<html lang="{lang_code}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>鏄剧ず鍣ㄧ獥鍙ｇ鐞嗗櫒</title>
+<title>{title}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Microsoft YaHei UI','Segoe UI',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;display:flex;justify-content:center;padding:20px}
 .card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);width:100%;max-width:420px;padding:24px}
-h1{font-size:20px;text-align:center;margin-bottom:20px;color:#1a1a2e}
+.header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.lang-toggle{background:none;border:1px solid #1976d2;color:#1976d2;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer;transition:all .15s}
+.lang-toggle:hover{background:#e3f2fd}
 .section{margin-bottom:16px}
 .section-title{font-size:13px;font-weight:700;color:#666;text-transform:uppercase;margin-bottom:8px;letter-spacing:.5px}
 .monitor-list{display:flex;flex-direction:column;gap:6px}
@@ -543,75 +673,86 @@ h1{font-size:20px;text-align:center;margin-bottom:20px;color:#1a1a2e}
 </head>
 <body>
 <div class="card">
-  <h1>鏄剧ず鍣ㄧ獥鍙ｇ鐞嗗櫒</h1>
+  <div class="header-row">
+    <h1 style="margin-bottom:0">{heading}</h1>
+    <button class="lang-toggle" onclick="switchLang()">{lang_toggle}</button>
+  </div>
 
   <div class="section">
-    <div class="section-title">鏄剧ず鍣ㄧ姸鎬?/div>
-    <div class="monitor-list" id="monitorList">鍔犺浇涓?..</div>
+    <div class="section-title">{section_monitor}</div>
+    <div class="monitor-list" id="monitorList">{loading}</div>
   </div>
 
   <div class="section">
     <div class="status-row">
-      <span>绉诲姩鏂瑰悜</span>
-      <span id="directionLabel" style="font-weight:600;color:#1976d2">鍓睆 鈫?涓诲睆</span>
+      <span>{direction_label}</span>
+      <span id="directionLabel" style="font-weight:600;color:#1976d2">{dir_secondary_to_primary}</span>
     </div>
     <div class="status-row">
-      <span>鏄剧ず鍣ㄥ睆钄?/span>
-      <span id="shieldLabel" style="font-weight:600;color:#888">鏈惎鐢?/span>
+      <span>{shield_label}</span>
+      <span id="shieldLabel" style="font-weight:600;color:#888">{shield_off}</span>
     </div>
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="moveWindows()">绉诲姩绐楀彛</button>
-    <button class="btn btn-danger" id="shieldBtn" onclick="toggleShield()">灞忚斀: 鍏?/button>
+    <button class="btn btn-primary" onclick="moveWindows()">{btn_move}</button>
+    <button class="btn btn-danger" id="shieldBtn" onclick="toggleShield()">{btn_shield_off}</button>
   </div>
   <div class="btn-row">
-    <button class="btn btn-outline" onclick="toggleSettings()">璁剧疆</button>
-    <button class="btn btn-outline" onclick="refresh()">鍒锋柊</button>
+    <button class="btn btn-outline" onclick="toggleSettings()">{btn_settings}</button>
+    <button class="btn btn-outline" onclick="refresh()">{btn_refresh}</button>
   </div>
 
   <div class="settings-panel" id="settingsPanel">
     <div class="section">
-      <div class="section-title">绉诲姩鏂瑰悜</div>
+      <div class="section-title">{settings_direction}</div>
       <div class="radio-group">
         <label class="radio-option" id="dirOpt1">
           <input type="radio" name="direction" value="secondary_to_primary" checked>
-          鍓睆 鈫?涓诲睆锛堝皢绗簩灞忓箷绐楀彛绉诲洖涓诲睆骞曪級
+          <span id="dirOpt1Text">{dir_opt1}</span>
         </label>
         <label class="radio-option" id="dirOpt2">
           <input type="radio" name="direction" value="primary_to_secondary">
-          涓诲睆 鈫?鍓睆锛堝皢涓诲睆骞曠獥鍙ｇЩ鑷崇浜屽睆骞曪級
+          <span id="dirOpt2Text">{dir_opt2}</span>
         </label>
       </div>
     </div>
 
     <div class="section" style="margin-top:16px">
-      <div class="section-title">鏄剧ず鍣ㄥ睆钄?/div>
+      <div class="section-title">{settings_shield}</div>
       <div class="checkbox-group">
         <input type="checkbox" id="shieldEnabled">
-        <label for="shieldEnabled">鍚敤灞忚斀锛堥樆姝㈡柊绐楀彛杩涘叆鎸囧畾鏄剧ず鍣級</label>
+        <label for="shieldEnabled" id="shieldCheckLabel">{shield_checkbox}</label>
       </div>
       <div class="shield-options" id="shieldOptions">
         <div class="shield-row">
           <select id="shieldMonitor"></select>
-          <span class="shield-arrow">鈫?/span>
+          <span class="shield-arrow">→</span>
           <select id="shieldTarget"></select>
         </div>
-        <p style="font-size:12px;color:#888;margin-top:8px">鍚敤鍚庯紝灞忚斀鏄剧ず鍣ㄤ笂鐨勭獥鍙ｅ皢琚嚜鍔ㄧЩ璧帮紝鏂扮獥鍙ｄ篃涓嶄細鍋滅暀鍦ㄨ鏄剧ず鍣ㄤ笂銆?/p>
+        <p style="font-size:12px;color:#888;margin-top:8px" id="shieldHintText">{shield_hint}</p>
       </div>
     </div>
 
     <div class="settings-btns">
-      <button class="btn btn-primary" onclick="saveSettings()">淇濆瓨</button>
-      <button class="btn btn-outline" onclick="toggleSettings()">鍙栨秷</button>
+      <button class="btn btn-primary" onclick="saveSettings()">{btn_save}</button>
+      <button class="btn btn-outline" onclick="toggleSettings()">{btn_cancel}</button>
     </div>
   </div>
 
-  <div class="hk-info">Ctrl+Shift+M 绉诲姩 路 Ctrl+Shift+S 鍒囨崲灞忚斀</div>
+  <div class="hk-info">{hk_info}</div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
+var I18N = {i18n_json};
+
+function switchLang() {
+  var cur = I18N.lang_toggle === 'English' ? 'en' : 'zh';
+  window._switchingLang = true;
+  fetch('/api/set-language?lang=' + cur).then(function() { location.reload(); });
+}
+
 const API = '/api';
 
 async function refresh() {
@@ -630,41 +771,40 @@ async function refresh() {
 function renderMonitors(monitors) {
   const el = document.getElementById('monitorList');
   if (!monitors || monitors.length === 0) {
-    el.innerHTML = '<div class="monitor-item" style="color:#888">鏈娴嬪埌鏄剧ず鍣?/div>';
+    el.innerHTML = '<div class="monitor-item" style="color:#888">' + I18N.no_monitor + '</div>';
     return;
   }
-  el.innerHTML = monitors.map(m =>
-    `<div class="monitor-item">
-      <span>鏄剧ず鍣?${m.index}: ${m.width}x${m.height}</span>
-      ${m.primary ? '<span class="badge badge-primary">涓绘樉绀哄櫒</span>' : '<span class="badge badge-secondary">鍓睆</span>'}
-    </div>`
-  ).join('');
+  el.innerHTML = monitors.map(function(m) {
+    return '<div class="monitor-item"><span>' + I18N.monitor + ' ' + m.index + ': ' + m.width + 'x' + m.height + '</span>' +
+      (m.primary ? '<span class="badge badge-primary">' + I18N.primary + '</span>' : '<span class="badge badge-secondary">' + I18N.secondary + '</span>') +
+      '</div>';
+  }).join('');
 }
 
 function renderDirection(dir) {
   const el = document.getElementById('directionLabel');
-  el.textContent = dir === 'secondary_to_primary' ? '鍓睆 鈫?涓诲睆' : '涓诲睆 鈫?鍓睆';
+  el.textContent = dir === 'secondary_to_primary' ? I18N.dir_secondary_to_primary : I18N.dir_primary_to_secondary;
 }
 
 function renderShield(sh) {
   const el = document.getElementById('shieldLabel');
   const btn = document.getElementById('shieldBtn');
   if (sh.active) {
-    el.innerHTML = '<span class="status-dot active"></span>宸插惎鐢?(鏄剧ず鍣?+sh.shielded+' 鈫?鏄剧ず鍣?+sh.target+')';
+    el.innerHTML = '<span class="status-dot active"></span>' + I18N.shield_on + ' (' + I18N.monitor + sh.shielded + ' \u2192 ' + I18N.monitor + sh.target + ')';
     el.style.color = '#e53935';
-    btn.textContent = '灞忚斀: 寮€';
+    btn.textContent = I18N.btn_shield_on;
     btn.classList.add('active');
   } else {
-    el.innerHTML = '<span class="status-dot inactive"></span>鏈惎鐢?;
+    el.innerHTML = '<span class="status-dot inactive"></span>' + I18N.shield_off;
     el.style.color = '#888';
-    btn.textContent = '灞忚斀: 鍏?;
+    btn.textContent = I18N.btn_shield_off;
     btn.classList.remove('active');
   }
 }
 
 function renderSettings(s) {
   document.querySelector('input[name="direction"][value="'+s.direction+'"]').checked = true;
-  document.querySelectorAll('.radio-option').forEach(o => {
+  document.querySelectorAll('.radio-option').forEach(function(o) {
     o.classList.toggle('selected', o.querySelector('input').checked);
   });
   document.getElementById('shieldEnabled').checked = s.shield_enabled;
@@ -674,10 +814,10 @@ function renderSettings(s) {
   const st = document.getElementById('shieldTarget');
   sm.innerHTML = st.innerHTML = '';
   if (s.monitors) {
-    s.monitors.forEach(m => {
-      const opt = `<option value="${m.index}">${m.index === 1 ? '鏄剧ず鍣?1'+(m.primary?' (涓?':'') : '鏄剧ず鍣?'+m.index}</option>`;
-      sm.innerHTML += opt;
-      st.innerHTML += opt;
+    s.monitors.forEach(function(m) {
+      var label = I18N.monitor + ' ' + m.index + (m.primary ? ' (' + I18N.primary + ')' : '');
+      sm.innerHTML += '<option value="' + m.index + '">' + label + '</option>';
+      st.innerHTML += '<option value="' + m.index + '">' + label + '</option>';
     });
   }
   sm.value = s.shield_monitor;
@@ -709,14 +849,14 @@ async function saveSettings() {
     });
     const j = await r.json();
     if (j.ok) {
-      showToast('璁剧疆宸蹭繚瀛?);
+      showToast(I18N.toast_saved);
       document.getElementById('settingsPanel').classList.remove('show');
       refresh();
     } else {
-      showToast('淇濆瓨澶辫触: ' + (j.error || '鏈煡閿欒'));
+      showToast(I18N.toast_save_fail + ': ' + (j.error || I18N.toast_unknown_error));
     }
   } catch(e) {
-    showToast('缃戠粶閿欒');
+    showToast(I18N.toast_network_error);
   }
 }
 
@@ -727,7 +867,7 @@ async function moveWindows() {
     showToast(j.message);
     refresh();
   } catch(e) {
-    showToast('鎿嶄綔澶辫触');
+    showToast(I18N.toast_operation_fail);
   }
 }
 
@@ -738,7 +878,7 @@ async function toggleShield() {
     showToast(j.message);
     refresh();
   } catch(e) {
-    showToast('鎿嶄綔澶辫触');
+    showToast(I18N.toast_operation_fail);
   }
 }
 
@@ -746,12 +886,12 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
 }
 
-document.querySelectorAll('input[name="direction"]').forEach(r => {
-  r.addEventListener('change', () => {
-    document.querySelectorAll('.radio-option').forEach(o => {
+document.querySelectorAll('input[name="direction"]').forEach(function(r) {
+  r.addEventListener('change', function() {
+    document.querySelectorAll('.radio-option').forEach(function(o) {
       o.classList.toggle('selected', o.querySelector('input').checked);
     });
   });
@@ -759,7 +899,7 @@ document.querySelectorAll('input[name="direction"]').forEach(r => {
 document.getElementById('shieldEnabled').addEventListener('change', function() {
   document.getElementById('shieldOptions').classList.toggle('show', this.checked);
 });
-document.querySelectorAll('.radio-option').forEach(o => {
+document.querySelectorAll('.radio-option').forEach(function(o) {
   o.addEventListener('click', function(e) {
     if (e.target.tagName !== 'INPUT') {
       this.querySelector('input').click();
@@ -767,9 +907,12 @@ document.querySelectorAll('.radio-option').forEach(o => {
   });
 });
 
-// 蹇冭烦锛氭瘡 5 绉?ping 涓€娆★紝淇濇寔鏈嶅姟绔瓨娲?setInterval(() => { fetch(API+'/ping').catch(()=>{}); }, 5000);
+// heartbeat
+setInterval(function() { fetch(API+'/ping').catch(function(){}); }, 5000);
 
-// 鍏抽棴缃戦〉鏃堕€氱煡鏈嶅姟绔€€鍑?window.addEventListener('beforeunload', () => {
+// notify on close
+window.addEventListener('beforeunload', function() {
+  if (window._switchingLang) return;
   navigator.sendBeacon(API+'/quit');
 });
 
@@ -777,6 +920,17 @@ refresh();
 </script>
 </body>
 </html>"""
+
+
+def get_html(lang='zh'):
+    """根据语言生成 HTML 页面"""
+    i18n = I18N.get(lang, I18N['zh'])
+    page = HTML_PAGE
+    for key, val in i18n.items():
+        page = page.replace('{' + key + '}', val)
+    page = page.replace('{i18n_json}', json.dumps(i18n, ensure_ascii=False))
+    page = page.replace('{lang_code}', 'zh-CN' if lang == 'zh' else 'en')
+    return page
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -796,7 +950,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/' or self.path == '/index.html':
-            self._send(200, HTML_PAGE, 'text/html')
+            self._send(200, get_html(self.app.lang), 'text/html')
         elif self.path == '/api/state':
             app = self.app
             monitors = WindowManager.get_monitors()
@@ -818,55 +972,64 @@ class RequestHandler(BaseHTTPRequestHandler):
             cfg = app.config
             monitors = WindowManager.get_monitors()
             if len(monitors) < 2:
-                self._send(200, {'ok': False, 'message': '浠呮娴嬪埌涓€涓樉绀哄櫒'})
+                self._send(200, {'ok': False, 'message': get_lang_str(self.app.lang, 'msg_single_monitor')})
                 return
             if cfg['move_direction'] == 'secondary_to_primary':
                 primary = next((m for m in monitors if m['primary']), None)
                 if not primary:
-                    self._send(200, {'ok': False, 'message': '鏃犳硶纭畾涓绘樉绀哄櫒'})
+                    self._send(200, {'ok': False, 'message': get_lang_str(self.app.lang, 'msg_no_primary')})
                     return
                 total = 0
                 for m in monitors:
                     if not m['primary']:
                         total += len(WindowManager.move_all_from_monitor(m['index'], primary['index']))
-                self._send(200, {'ok': True, 'message': f'宸插皢 {total} 涓獥鍙ｄ粠鍓睆绉诲姩鍒颁富灞?})
+                self._send(200, {'ok': True, 'message': get_lang_str(self.app.lang, 'msg_moved_to_primary').format(total=total)})
             else:
                 primary = next((m for m in monitors if m['primary']), None)
                 if not primary:
-                    self._send(200, {'ok': False, 'message': '鏃犳硶纭畾涓绘樉绀哄櫒'})
+                    self._send(200, {'ok': False, 'message': get_lang_str(self.app.lang, 'msg_no_primary')})
                     return
                 target = next((m for m in monitors if not m['primary']), None)
                 if not target:
-                    self._send(200, {'ok': False, 'message': '娌℃湁妫€娴嬪埌鍓睆'})
+                    self._send(200, {'ok': False, 'message': get_lang_str(self.app.lang, 'msg_no_secondary')})
                     return
                 moved = WindowManager.move_all_from_monitor(primary['index'], target['index'])
-                self._send(200, {'ok': True, 'message': f'宸插皢 {len(moved)} 涓獥鍙ｄ粠涓诲睆绉诲姩鍒版樉绀哄櫒 {target["index"]}'})
+                self._send(200, {'ok': True, 'message': get_lang_str(self.app.lang, 'msg_moved_to_secondary').format(count=len(moved), index=target["index"])})
         elif self.path == '/api/toggle-shield':
             app = self.app
             if app.shield.is_active:
                 app.shield.stop()
                 app.config['shield_enabled'] = False
                 app.config.save()
-                self._send(200, {'ok': True, 'message': '灞忚斀宸插叧闂?})
+                self._send(200, {'ok': True, 'message': get_lang_str(self.app.lang, 'msg_shield_off')})
             else:
                 monitors = WindowManager.get_monitors()
                 if len(monitors) < 2:
-                    self._send(200, {'ok': False, 'message': '闇€瑕佽嚦灏?2 涓樉绀哄櫒'})
+                    self._send(200, {'ok': False, 'message': get_lang_str(self.app.lang, 'msg_shield_need_two')})
                     return
                 si = app.config['shield_monitor']
                 ti = app.config['shield_target']
                 if si == ti:
-                    self._send(200, {'ok': False, 'message': '灞忚斀鏄剧ず鍣ㄥ拰鐩爣鏄剧ず鍣ㄤ笉鑳界浉鍚?})
+                    self._send(200, {'ok': False, 'message': get_lang_str(self.app.lang, 'msg_shield_same')})
                     return
                 app.shield.start(si, ti)
                 app.config['shield_enabled'] = True
                 app.config.save()
-                self._send(200, {'ok': True, 'message': f'灞忚斀宸插惎鐢?(鏄剧ず鍣?{si} 鈫?鏄剧ず鍣?{ti})'})
+                self._send(200, {'ok': True, 'message': get_lang_str(self.app.lang, 'msg_shield_on').format(si=si, ti=ti)})
+        elif self.path.startswith('/api/set-language'):
+            from urllib.parse import urlparse, parse_qs
+            qs = parse_qs(urlparse(self.path).query)
+            lang = qs.get('lang', ['zh'])[0]
+            if lang in I18N:
+                self.app.lang = lang
+                self.app.config['language'] = lang
+                self.app.config.save()
+            self._send(200, {'ok': True, 'language': self.app.lang})
         elif self.path == '/api/ping':
             self.app.last_heartbeat = time.time()
             self._send(200, {'ok': True, 'ping': 'pong'})
         elif self.path == '/api/quit':
-            self._send(200, {'ok': True, 'message': '姝ｅ湪閫€鍑?..'})
+            self._send(200, {'ok': True, 'message': get_lang_str(self.app.lang, 'msg_quitting')})
             threading.Thread(target=self.app.quit, daemon=True).start()
         else:
             self._send(404, {'error': 'Not found'})
@@ -884,7 +1047,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             app.apply_shield_settings()
             self._send(200, {'ok': True})
         elif self.path == '/api/quit':
-            self._send(200, {'ok': True, 'message': '姝ｅ湪閫€鍑?..'})
+            self._send(200, {'ok': True, 'message': get_lang_str(self.app.lang, 'msg_quitting')})
             threading.Thread(target=self.app.quit, daemon=True).start()
         else:
             self._send(404, {'error': 'Not found'})
@@ -898,7 +1061,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 # ============================================================
-# 鎵樼洏 + 鐑敭 娑堟伅绐楀彛
+# 托盘 + 热键 消息窗口
 # ============================================================
 class TrayWindow:
     def __init__(self, app):
@@ -939,14 +1102,14 @@ class TrayWindow:
         nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP
         nid.uCallbackMessage = WM_TRAYICON
         nid.hIcon = self._icon
-        nid.szTip = "鏄剧ず鍣ㄧ獥鍙ｇ鐞嗗櫒"
+        nid.szTip = get_lang_str(self.app.lang, 'tray_tip')
         shell32.Shell_NotifyIconW(NIM_ADD, byref(nid))
 
         user32.RegisterHotKey(self.hwnd, 1, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_M)
         user32.RegisterHotKey(self.hwnd, 2, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_S)
 
     def _create_tray_icon(self):
-        """鐢?GDI 缁樺埗涓€涓畝鍗曠殑鏄剧ず鍣ㄥ浘鏍?""
+        """用 GDI 绘制一个简单的显示器图标"""
         SM_CXSMICON = 49
         SM_CYSMICON = 50
         w = user32.GetSystemMetrics(SM_CXSMICON)
@@ -955,24 +1118,24 @@ class TrayWindow:
         hdc = user32.GetDC(None)
         mem_dc = gdi32.CreateCompatibleDC(hdc)
 
-        # 鍒涘缓棰滆壊浣嶅浘
+        # 创建颜色位图
         bmp = gdi32.CreateCompatibleBitmap(hdc, w, h)
         gdi32.SelectObject(mem_dc, bmp)
 
-        # 钃濊壊鑳屾櫙
+        # 蓝色背景
         full = RECT(0, 0, w, h)
         brush = gdi32.CreateSolidBrush(0x00D67619)  # BGR = #1976D2
         user32.FillRect(mem_dc, byref(full), brush)
         gdi32.DeleteObject(brush)
 
-        # 鐧借壊灞忓箷鍖哄煙
+        # 白色屏幕区域
         pad = max(2, w // 8)
         sr = RECT(pad, pad, w - pad, h - pad - h // 4)
         brush = gdi32.CreateSolidBrush(0x00FFFFFF)
         user32.FillRect(mem_dc, byref(sr), brush)
         gdi32.DeleteObject(brush)
 
-        # 鐧借壊搴曞骇
+        # 白色底座
         sw = max(3, w // 4)
         br = RECT(w // 2 - sw // 2, h - pad - h // 4, w // 2 + sw // 2, h - pad)
         brush = gdi32.CreateSolidBrush(0x00FFFFFF)
@@ -982,12 +1145,13 @@ class TrayWindow:
         gdi32.DeleteDC(mem_dc)
         user32.ReleaseDC(None, hdc)
 
-        # 鍒涘缓鍗曡壊 AND 鎺╃爜锛堝叏鐧?鍏ㄤ笉閫忔槑锛?        mask_bytes = (ctypes.c_ubyte * (((w * h) + 7) // 8))()
+        # 创建单色 AND 掩码（全白=全不透明）
+        mask_bytes = (ctypes.c_ubyte * (((w * h) + 7) // 8))()
         for i in range(len(mask_bytes)):
             mask_bytes[i] = 0xFF
         mask_bmp = gdi32.CreateBitmap(w, h, 1, 1, mask_bytes)
 
-        # 鍒涘缓鍥炬爣
+        # 创建图标
         ic = ICONINFO()
         ic.fIcon = True
         ic.hbmColor = bmp
@@ -1000,13 +1164,14 @@ class TrayWindow:
 
     def _show_menu(self):
         menu = user32.CreatePopupMenu()
-        s = "灞忚斀: 寮€" if self.app.shield.is_active else "灞忚斀: 鍏?
-        user32.AppendMenuW(menu, MF_STRING, 1, "绉诲姩绐楀彛")
+        lang = self.app.lang
+        s = get_lang_str(lang, 'menu_shield_on') if self.app.shield.is_active else get_lang_str(lang, 'menu_shield_off')
+        user32.AppendMenuW(menu, MF_STRING, 1, get_lang_str(lang, 'menu_move'))
         user32.AppendMenuW(menu, MF_STRING, 2, s)
         user32.AppendMenuW(menu, MF_SEPARATOR, 0, None)
-        user32.AppendMenuW(menu, MF_STRING, 3, "鎵撳紑鐣岄潰")
+        user32.AppendMenuW(menu, MF_STRING, 3, get_lang_str(lang, 'menu_open'))
         user32.AppendMenuW(menu, MF_SEPARATOR, 0, None)
-        user32.AppendMenuW(menu, MF_STRING, 4, "閫€鍑?)
+        user32.AppendMenuW(menu, MF_STRING, 4, get_lang_str(lang, 'menu_exit'))
         pt = POINT()
         user32.GetCursorPos(byref(pt))
         user32.SetForegroundWindow(self.hwnd)
@@ -1096,23 +1261,24 @@ class TrayWindow:
 
 
 # ============================================================
-# 搴旂敤绋嬪簭
+# 应用程序
 # ============================================================
 class App:
     def __init__(self):
         h = kernel32.CreateMutexW(None, False, "Global\\DWM_SingleInstance_v2")
+        self.config = ConfigManager()
+        self.lang = self.config.get('language', 'zh')
         if kernel32.GetLastError() == ERROR_ALREADY_EXISTS:
-            user32.MessageBoxW(None, "鏄剧ず鍣ㄧ獥鍙ｇ鐞嗗櫒宸茬粡鍦ㄨ繍琛屼腑銆?, "宸插湪杩愯", MB_OK | MB_ICONWARNING)
+            user32.MessageBoxW(None, get_lang_str(self.lang, 'msg_already_running'), get_lang_str(self.lang, 'msg_already_running_title'), MB_OK | MB_ICONWARNING)
             sys.exit(0)
 
-        self.config = ConfigManager()
         self.shield = DisplayShield()
         self.tray = None
         self.server = None
         self.last_heartbeat = time.time()
 
     def _heartbeat_checker(self):
-        """鍚庡彴绾跨▼锛氭娴嬪績璺宠秴鏃跺垯鑷姩閫€鍑?""
+        """后台线程：检测心跳超时则自动退出"""
         while True:
             time.sleep(5)
             if time.time() - self.last_heartbeat > 15:
@@ -1120,7 +1286,7 @@ class App:
                 return
 
     def quit(self):
-        """瀹夊叏閫€鍑哄簲鐢?""
+        """安全退出应用"""
         self.shield.stop()
         if self.tray:
             self.tray._running = False
