@@ -184,7 +184,7 @@ body {
 .hero {
   background: var(--color-hero-bg);
   padding: 80px 24px 64px;
-  text-align: center; overflow-x: hidden;
+  text-align: center;
   transition: var(--transition-theme);
 }
 .hero-inner { max-width: 680px; margin: 0 auto; }
@@ -217,6 +217,11 @@ body {
   transition: opacity .4s ease;
 }
 .hero h1.font-loaded .hero-svg { opacity: 0; }
+/* Inherit text color for SVG glyphs + fix positioning */
+.hero-svg g {
+  fill: currentColor;
+  transform: none;
+}
 /* Line-2 SVG inherits .hero-spring transform */
 /* Text fade in when font ready */
 .hero-text-line {
@@ -231,7 +236,7 @@ body {
   display: inline-block;
   font-size: 1.25em;
   color: var(--color-accent);
-  transform: translateX(-8vw);
+  transform: translateX(4vw);
   transition: transform .8s cubic-bezier(.34,1.56,.64,1);
   will-change: transform;
 }
@@ -481,7 +486,7 @@ body {
   .hero { padding: 56px 20px 48px; }
   .hero h1 { font-size: 36px; font-weight: 400; }
   .hero p { font-size: 17px; }
-  .hero-spring { transform: translateX(-4vw); font-size: 1.1em; }
+  .hero-spring { transform: translateX(2vw); font-size: 1.1em; }
   .hero-actions { flex-direction: column; align-items: center; }
   .hero-actions .btn { width: 100%; justify-content: center; }
   .section { padding: 64px 20px; }
