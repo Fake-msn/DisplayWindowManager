@@ -1,4 +1,4 @@
-# DisplayWindowManager
+# WinBack
 
 > 一键操控多显示器窗口 —— 轻量、免费、开源
 
@@ -16,7 +16,7 @@
 - 远程桌面分辨率不匹配，窗口飞到屏幕外
 - 新开的窗口总是跑到不想用的显示器上，需要反复拖拽
 
-**DisplayWindowManager** 就是为了解决这些问题而生。只需一键（或快捷键 `Ctrl+Shift+M`），即可将所有窗口从副屏移至主屏（或反向移动），彻底告别"找不到窗口"的痛苦。
+**WinBack** 就是为了解决这些问题而生。只需一键（或快捷键 `Ctrl+Shift+M`），即可将所有窗口从副屏移至主屏（或反向移动），彻底告别"找不到窗口"的痛苦。
 
 > **温馨提示**：少数系统级窗口（如系统设置、任务管理器等）受 Windows 底层安全机制保护，无法被第三方软件移动，这是操作系统的安全设计，并非软件缺陷。绝大多数日常应用的窗口均可正常移动，详见下方[已知限制](#已知限制)。
 
@@ -60,7 +60,7 @@ python display_window_manager.py
 
 ```bash
 pip install pyinstaller
-pyinstaller --onefile --windowed --name "DisplayWindowManager" display_window_manager.py
+pyinstaller --onefile --windowed --name "WinBack" display_window_manager.py
 ```
 
 ---
@@ -92,7 +92,7 @@ pyinstaller --onefile --windowed --name "DisplayWindowManager" display_window_ma
 
 ## 竞品对比
 
-| 维度 | **DisplayWindowManager** | DisplayFusion | PowerToys FancyZones | Actual Window Manager | Dual Monitor Tools |
+| 维度 | **WinBack** | DisplayFusion | PowerToys FancyZones | Actual Window Manager | Dual Monitor Tools |
 |------|:--:|:--:|:--:|:--:|:--:|
 | **价格** | **免费** | ¥232 起 | 免费 | ¥430 起 | 免费 |
 | **开源** | **MIT** | 专有 | **MIT** | 专有 | GPL |
