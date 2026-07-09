@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-显示器窗口管理器 - Display Window Manager v2.0
+窗归 - WinBack v2.0
 ==============================================
 纯 Python + Win32 API 实现，通过浏览器提供稳定 GUI。
 
@@ -31,8 +31,8 @@ from pathlib import Path
 # ============================================================
 I18N = {
     'zh': {
-        'title': '显示器窗口管理器',
-        'heading': '显示器窗口管理器',
+        'title': '窗归',
+        'heading': '窗归',
         'section_monitor': '显示器状态',
         'loading': '加载中...',
         'direction_label': '移动方向',
@@ -64,7 +64,7 @@ I18N = {
         'toast_unknown_error': '未知错误',
         'toast_network_error': '网络错误',
         'toast_operation_fail': '操作失败',
-        'tray_tip': '显示器窗口管理器',
+        'tray_tip': '窗归',
         'menu_move': '移动窗口',
         'menu_shield_on': '屏蔽: 开',
         'menu_shield_off': '屏蔽: 关',
@@ -80,14 +80,14 @@ I18N = {
         'msg_shield_same': '屏蔽显示器和目标显示器不能相同',
         'msg_shield_on': '屏蔽已启用 (显示器 {si} → 显示器 {ti})',
         'msg_quitting': '正在退出...',
-        'msg_already_running': '显示器窗口管理器已经在运行中。',
+        'msg_already_running': '窗归已经在运行中。',
         'msg_already_running_title': '已在运行',
         'lang_toggle': 'English',
         'lang_switch': '语言',
     },
     'en': {
-        'title': 'Display Window Manager',
-        'heading': 'Display Window Manager',
+        'title': 'WinBack',
+        'heading': 'WinBack',
         'section_monitor': 'Monitor Status',
         'loading': 'Loading...',
         'direction_label': 'Move Direction',
@@ -119,7 +119,7 @@ I18N = {
         'toast_unknown_error': 'Unknown error',
         'toast_network_error': 'Network error',
         'toast_operation_fail': 'Operation failed',
-        'tray_tip': 'Display Window Manager',
+        'tray_tip': 'WinBack',
         'menu_move': 'Move Windows',
         'menu_shield_on': 'Shield: On',
         'menu_shield_off': 'Shield: Off',
@@ -135,7 +135,7 @@ I18N = {
         'msg_shield_same': 'Shield monitor and target monitor must be different',
         'msg_shield_on': 'Shield enabled (Monitor {si} → Monitor {ti})',
         'msg_quitting': 'Exiting...',
-        'msg_already_running': 'Display Window Manager is already running.',
+        'msg_already_running': 'WinBack is already running.',
         'msg_already_running_title': 'Already Running',
         'lang_toggle': '中文',
         'lang_switch': 'Language',
