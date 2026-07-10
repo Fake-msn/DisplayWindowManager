@@ -44,7 +44,7 @@
 
 [**点击直接下载 V0.53**](https://github.com/Fake-msn/WinBack/releases/download/V0.53/WinBack.exe)（6.6 MB，双击运行）
 
-> 国内用户如遇下载缓慢，可使用 [镜像加速下载](https://ghproxy.com/https://github.com/Fake-msn/WinBack/releases/download/V0.53/WinBack.exe)，或访问 [项目主页](https://fake-msn.github.io/WinBack/) 获取最新下载链接。
+> 国内用户如遇下载缓慢，可使用 [镜像加速下载](https://ghproxy.net/https://github.com/Fake-msn/WinBack/releases/download/V0.53/WinBack.exe)，或访问 [项目主页](https://fake-msn.github.io/WinBack/) 获取最新下载链接。
 
 ### 方式二：从源码运行
 
